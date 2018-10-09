@@ -1,2 +1,2 @@
-# fpu
-test
+faddとfsubは完成
+fmulは非正規化数に誤差あり
