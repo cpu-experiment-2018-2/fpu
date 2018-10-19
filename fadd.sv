@@ -51,7 +51,7 @@ always@(posedge clk) begin
     end else begin
       tashi1hiki0 <= 0;
     end
-    if ((wadata[30:23] > wbdata[30:23]) || ((wadata[30:23] = wbdata[30:23]) && (wadata[22:0] >=wbdata[22:0]))) begin
+    if ((wadata[30:23] > wbdata[30:23]) || ((wadata[30:23] == wbdata[30:23]) && (wadata[22:0] >= wbdata[22:0]))) begin
       s1 <= wadata[31];
       e1 <= wadata[30:23];
       deka <= {1'b0,1'b1,wadata[22:0]};
@@ -67,64 +67,64 @@ always@(posedge clk) begin
     s2 <= s1;
     e2 <= e1;
     if (tashi1hiki0 == 1) begin
-      kekka <= deka + chibi;
+      kekka <= deka[24:0] + chibi[24:0];
     end else begin
-      kekka <= deka - chibi;
+      kekka <= deka[24:0] - chibi[24:0];
     end
   end else if (state == STAGE3) begin
     done <= 1;
     busy <= 0;
     state <= WAIT_ST;
     if (kekka[24] == 1) begin
-      result <= {s2,e2+1,kekka[23:1]};
+      result <= {s2,e2[7:0]+8'd1,kekka[23:1]};
     end else if (kekka[23] == 1) begin
-      result <= {s2,e2,kekka[22:0]};
+      result <= {s2,e2[7:0],kekka[22:0]};
     end else if (kekka[22] == 1) begin
-      result <= {s2,e2-1,kekka[21:0],1'b0};
+      result <= {s2,e2[7:0]-8'd1,kekka[21:0],1'b0};
     end else if (kekka[21] == 1) begin
-      result <= {s2,e2-2,kekka[20:0],2'b0};
+      result <= {s2,e2[7:0]-8'd2,kekka[20:0],2'b0};
     end else if (kekka[20] == 1) begin
-      result <= {s2,e2-3,kekka[19:0],3'b0};
+      result <= {s2,e2[7:0]-8'd3,kekka[19:0],3'b0};
     end else if (kekka[19] == 1) begin
-      result <= {s2,e2-4,kekka[18:0],4'b0};
+      result <= {s2,e2[7:0]-8'd4,kekka[18:0],4'b0};
     end else if (kekka[18] == 1) begin
-      result <= {s2,e2-5,kekka[17:0],5'b0};
+      result <= {s2,e2[7:0]-8'd5,kekka[17:0],5'b0};
     end else if (kekka[17] == 1) begin
-      result <= {s2,e2-6,kekka[16:0],6'b0};
+      result <= {s2,e2[7:0]-8'd6,kekka[16:0],6'b0};
     end else if (kekka[16] == 1) begin
-      result <= {s2,e2-7,kekka[15:0],7'b0};
+      result <= {s2,e2[7:0]-8'd7,kekka[15:0],7'b0};
     end else if (kekka[15] == 1) begin
-      result <= {s2,e2-8,kekka[14:0],8'b0};
+      result <= {s2,e2[7:0]-8'd8,kekka[14:0],8'b0};
     end else if (kekka[14] == 1) begin
-      result <= {s2,e2-9,kekka[13:0],9'b0};
+      result <= {s2,e2[7:0]-8'd9,kekka[13:0],9'b0};
     end else if (kekka[13] == 1) begin
-      result <= {s2,e2-10,kekka[12:0],10'b0};
+      result <= {s2,e2[7:0]-8'd10,kekka[12:0],10'b0};
     end else if (kekka[12] == 1) begin
-      result <= {s2,e2-11,kekka[11:0],11'b0};
+      result <= {s2,e2[7:0]-8'd11,kekka[11:0],11'b0};
     end else if (kekka[11] == 1) begin
-      result <= {s2,e2-12,kekka[10:0],12'b0};
+      result <= {s2,e2[7:0]-8'd12,kekka[10:0],12'b0};
     end else if (kekka[10] == 1) begin
-      result <= {s2,e2-13,kekka[9:0],13'b0};
+      result <= {s2,e2[7:0]-8'd13,kekka[9:0],13'b0};
     end else if (kekka[9] == 1) begin
-      result <= {s2,e2-14,kekka[8:0],14'b0};
+      result <= {s2,e2[7:0]-8'd14,kekka[8:0],14'b0};
     end else if (kekka[8] == 1) begin
-      result <= {s2,e2-15,kekka[7:0],15'b0};
+      result <= {s2,e2[7:0]-8'd15,kekka[7:0],15'b0};
     end else if (kekka[7] == 1) begin
-      result <= {s2,e2-16,kekka[6:0],16'b0};
+      result <= {s2,e2[7:0]-8'd16,kekka[6:0],16'b0};
     end else if (kekka[6] == 1) begin
-      result <= {s2,e2-17,kekka[5:0],17'b0};
+      result <= {s2,e2[7:0]-8'd17,kekka[5:0],17'b0};
     end else if (kekka[5] == 1) begin
-      result <= {s2,e2-18,kekka[4:0],18'b0};
+      result <= {s2,e2[7:0]-8'd18,kekka[4:0],18'b0};
     end else if (kekka[4] == 1) begin
-      result <= {s2,e2-19,kekka[3:0],19'b0};
+      result <= {s2,e2[7:0]-8'd19,kekka[3:0],19'b0};
     end else if (kekka[3] == 1) begin
-      result <= {s2,e2-20,kekka[2:0],20'b0};
+      result <= {s2,e2[7:0]-8'd20,kekka[2:0],20'b0};
     end else if (kekka[2] == 1) begin
-      result <= {s2,e2-21,kekka[1:0],21'b0};
+      result <= {s2,e2[7:0]-8'd21,kekka[1:0],21'b0};
     end else if (kekka[1] == 1) begin
-      result <= {s2,e2-22,kekka[0:0],22'b0};
+      result <= {s2,e2[7:0]-8'd22,kekka[0:0],22'b0};
     end else if (kekka[0] == 1) begin
-      result <= {s2,e2-23,23'b0};
+      result <= {s2,e2[7:0]-8'd23,23'b0};
     end else begin
       result <= 0;
     end
