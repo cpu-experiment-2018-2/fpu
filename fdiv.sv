@@ -68,11 +68,14 @@ reg        s1;
 reg [8:0]  e1;
 reg [24:0] adatakari;
 reg [24:0] invbkari;
+reg [8:0]  esyuuseia;
+reg [8:0]  esyuuseib;
 
 //STAGE9
 reg [47:0] kekka;
 reg        s2;
 reg [8:0]  e2;
+reg underflow;
 
 typedef enum logic [3:0] {
   WAIT_ST,STAGE1,STAGE2,STAGE3,STAGE4,STAGE5,STAGE6,STAGE7,STAGE8,STAGE9
@@ -6361,22 +6364,104 @@ always@(posedge clk) begin
   end else if (state == STAGE8) begin
         state <= STAGE9;
       s1 <= adata7[31] ^ bdata7[31];
-      e1 <= adata7[30:23] + 9'd127 - bdata7[30:23] + invb[30:23] ;
+      e1 <= adata7[30:23] + 9'd127 + invb[30:23];
+      esyuuseib <= bdata[30:23];
+      if (adata7[30:23] == 0) begin
+      if (adata7[22] == 1) begin
+	esyuuseia <= 0;
+	adatakari <= {adata7[22:0],1'b0};
+      end else if (adata7[21] == 1) begin
+	esyuuseia <= 1;
+	adatakari <= {adata7[21:0],2'b0};
+      end else if (adata7[20] == 1) begin
+	esyuuseia <= 2;
+	adatakari <= {adata7[20:0],3'b0};
+      end else if (adata7[19] == 1) begin
+	esyuuseia <= 3;
+	adatakari <= {adata7[19:0],4'b0};
+      end else if (adata7[18] == 1) begin
+	esyuuseia <= 4;
+	adatakari <= {adata7[18:0],5'b0};
+      end else if (adata7[17] == 1) begin
+	esyuuseia <= 5;
+	adatakari <= {adata7[17:0],6'b0};
+      end else if (adata7[16] == 1) begin
+	esyuuseia <= 6;
+	adatakari <= {adata7[16:0],7'b0};
+      end else if (adata7[15] == 1) begin
+	esyuuseia <= 7;
+	adatakari <= {adata7[15:0],8'b0};
+      end else if (adata7[14] == 1) begin
+	esyuuseia <= 8;
+	adatakari <= {adata7[14:0],9'b0};
+      end else if (adata7[13] == 1) begin
+	esyuuseia <= 9;
+	adatakari <= {adata7[13:0],10'b0};
+      end else if (adata7[12] == 1) begin
+	esyuuseia <= 10;
+	adatakari <= {adata7[12:0],11'b0};
+      end else if (adata7[11] == 1) begin
+	esyuuseia <= 11;
+	adatakari <= {adata7[11:0],12'b0};
+      end else if (adata7[10] == 1) begin
+	esyuuseia <= 12;
+	adatakari <= {adata7[10:0],13'b0};
+      end else if (adata7[9] == 1) begin
+	esyuuseia <= 13;
+	adatakari <= {adata7[9:0],14'b0};
+      end else if (adata7[8] == 1) begin
+	esyuuseia <= 14;
+	adatakari <= {adata7[8:0],15'b0};
+      end else if (adata7[7] == 1) begin
+	esyuuseia <= 15;
+	adatakari <= {adata7[7:0],16'b0};
+      end else if (adata7[6] == 1) begin
+	esyuuseia <= 16;
+	adatakari <= {adata7[6:0],17'b0};
+      end else if (adata7[5] == 1) begin
+	esyuuseia <= 17;
+	adatakari <= {adata7[5:0],18'b0};
+      end else if (adata7[4] == 1) begin
+	esyuuseia <= 18;
+	adatakari <= {adata7[4:0],19'b0};
+      end else if (adata7[3] == 1) begin
+	esyuuseia <= 19;
+	adatakari <= {adata7[3:0],20'b0};
+      end else if (adata7[2] == 1) begin
+	esyuuseia <= 20;
+	adatakari <= {adata7[2:0],21'b0};
+      end else if (adata7[1] == 1) begin
+	esyuuseia <= 21;
+	adatakari <= {adata7[1:0],22'b0};
+      end else if (adata7[0] == 1) begin
+	esyuuseia <= 22;
+	adatakari <= {1'b1,23'b0};
+      end else begin
+	esyuuseia <= 23;
+	adatakari <= 0;
+      end
+    end else begin
+      esyuuseia <= 0;
       adatakari <= {1'b1,adata7[22:0]};
+    end
       invbkari <= {1'b1,invb[22:0]};
   end else if (state == STAGE9) begin
     state <= STAGE10;
     s2 <= s1;
-    e2 <= e1 - 9'd127;
+    underflow <= (esyuuseia == 23 || (e1 < (esyuuseib + esyuuseia + 127))) ? 1 : 0;
+    e2 <=  e1 - esyuuseia - esyuuseib - 9'd127;
     kekka <= adatakari * invbkari;
   end else if (state == STAGE10) begin
     done <= 1;
     busy <= 0;
     state <= WAIT_ST;
+    if (underflow == 1) begin
+    result <= 32'b0;
+    end else
     if (kekka[47] == 1) begin
       result <= {s2,e2[7:0]+8'd1,kekka[46:24]};
     end else begin
-      result <= {s2,e2[7:0],kekka[45:23]};
+      result <= (e2 == 0) ? {s2,8'b0,kekka[46:24]} : {s2,e2[7:0],kekka[45:23]};
     end
   end
 end
