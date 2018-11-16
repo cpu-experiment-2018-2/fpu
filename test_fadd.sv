@@ -2,7 +2,7 @@
 `default_nettype none
 
 module test_fadd
-  #(parameter NSTAGE = 4)
+  #(parameter NSTAGE = 3)
    ();
    logic [31:0] y;
    shortreal    fx1,fx2,fy;
@@ -33,11 +33,11 @@ module test_fadd
    logic [29:0] counter2;
    logic [29:0] counter3;
 
-   fadd u1(en,x1,x2,y,done,busy,clk,rstn);
+   fadd u1(x1,x2,y,clk);
 
    initial begin
-      // $dumpfile("test_fadd_p2.vcd");
-      // $dumpvars(0);
+     //  $dumpfile("test_fadd_p2.vcd");
+     //  $dumpvars(0);
       #1;
       rstn = 0;
       clk = 1;
@@ -114,30 +114,7 @@ module test_fadd
 			clk = 0;
 			
 			
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-//			        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-			
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-			
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-			
+		
 			
 			#1;
 			clk = 1;	
@@ -173,31 +150,7 @@ module test_fadd
 		     clk = 0;
 		     
 		     
-		     #1;
-		     clk = 1;
-		     val[0] <= 0;
-		      counter1 <= counter1+1;
-	//	             $display("counter1 %b ", counter1);
-		     #1;
-		     clk = 0;
-		     
-		     #1;
-		     clk = 1;
-		     val[0] <= 0;
-		     	 counter1 <= counter1+1;
-	//	     	        $display("counter1 %b ", counter1);		
-			#1;
-			clk = 0;
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-						
-
-			
+	
 			#1;
 			clk = 1;
 			 counter1 <= counter1+1;
@@ -243,8 +196,14 @@ module test_fadd
 	 fy = fx1 + fx2;
 	 fybit = $shortrealtobits(fy);
 
-
-	 if ((!(fybit[30:23] == 0 && y[30:23] == 0)) && (y != fybit && y != fybit - 1 && y != fybit + 1)) begin
+/*	$display("kekka = %b",u1.kekka_reg);
+	$display ("deka = %b",u1.deka_m_reg);
+	$display("adata = %b",u1.adata);
+	$display("bdata = %b",u1.bdata);
+	$display("Hcarry = %b",u1.Hcarry);
+	$display("Hnocarry = %b",u1.Hnocarry);
+	$display("L = %b",u1.L);
+*/	 if ((!(fybit[30:23] == 0 && y[30:23] == 0)) && (y != fybit && y != fybit - 1 && y != fybit + 1)) begin
             $display("x1, x2 = %b %b", x1_reg[NSTAGE], x2_reg[NSTAGE]);
             $display("%e %b ", fy, fybit);
             $display("%e %b \n", $bitstoshortreal(y), y);
