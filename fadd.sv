@@ -1,142 +1,182 @@
 module fadd(
-  input wire        en,
-  input wire [31:0] adata,
-  input wire [31:0] bdata,
-  output reg [31:0] result,
-  output reg        done,
-  output reg        busy,
-  input wire        clk,
-  input wire        rstn);
+input wire [31:0] adata,
+input wire [31:0] bdata,
+output reg [31:0] result,
+input wire clk);
 
-//WAIT_ST
-reg [31:0] wadata;
-reg [31:0] wbdata;
+wire hiseiki_a;
+assign hiseiki_a = ! (| adata[30:23]);
 
-//STAGE1
-reg        s1;
-reg [7:0]  e1;
-reg [24:0] deka;
-reg [24:0] chibi;
-reg tashi1hiki0;
-reg whiseiki1;
+wire hiseiki_b;
+assign hiseiki_b = ! (| bdata[30:23]);
 
-//STAGE2
-reg [24:0] kekka;
-reg        s2;
-reg [7:0]  e2;
-reg whiseiki2;
+wire hiseiki;
+assign hiseiki   = hiseiki_a || hiseiki_b;
 
+wire tashi1hiki0;
+assign tashi1hiki0 = adata[31] ~^ bdata[31];
 
-typedef enum logic [2:0] {
-  WAIT_ST,STAGE1,STAGE2,STAGE3
-} state_type;
-state_type state;
+wire sisuudeka_a;
+assign sisuudeka_a = adata[30:23] > bdata[30:23];
+
+wire sisuuonaji;
+assign sisuuonaji = adata[30:23] == bdata[30:23];
+
+wire kasuudeka_a;
+assign kasuudeka_a = adata[22:0] > bdata[22:0];
+
+wire deka_a;
+assign deka_a = sisuudeka_a || (sisuuonaji && kasuudeka_a);
+
+wire deka_s;
+assign deka_s = deka_a ? adata[31] : bdata[31];
+
+wire [7:0] deka_e;
+assign deka_e = deka_a ? adata[30:23] : bdata[30:23];
+
+wire [23:0] deka_m;
+assign deka_m = deka_a ? {1'b1,adata[22:0]} : {1'b1,bdata[22:0]};
+
+wire [7:0] ahikub;
+assign ahikub = adata[30:23] - bdata[30:23];
+
+wire [7:0] bhikua;
+assign bhikua = bdata[30:23] - adata[30:23];
+
+wire [23:0] chibi_m;
+assign chibi_m = deka_a ? ({1'b1,bdata[22:0]} >> ahikub) : ({1'b1,adata[22:0]} >> bhikua);
+
+reg hiseiki_reg;
+reg hiseiki_a_reg;
+reg tashi1hiki0_reg;
+reg deka_s_reg;
+reg [7:0]  deka_e_reg;
+reg [23:0] deka_m_reg;
+reg [23:0] chibi_m_reg;
+reg [31:0] adata_reg_1;
+reg [31:0] bdata_reg_1;
 
 always@(posedge clk) begin
-  if (~rstn) begin
-    result <= 0;
-    done   <= 0;
-    busy   <= 0;
-    state  <= WAIT_ST;
-  end else if (state == WAIT_ST) begin
-    done <= 0;
-    if (en) begin
-      state <= STAGE1;
-      busy <= 1;
-      wadata <= adata;
-      wbdata <= bdata;
-    end
-  end else if (state == STAGE1) begin
-    state <= STAGE2;
-    whiseiki1 <= (wadata[30:23] == 0 && wbdata[30:23] == 0) ? 1 : 0;
-    if (wadata[31] == wbdata[31]) begin
-      tashi1hiki0 <= 1;
-    end else begin
-      tashi1hiki0 <= 0;
-    end
-    if ((wadata[30:23] > wbdata[30:23]) || ((wadata[30:23] == wbdata[30:23]) && (wadata[22:0] >= wbdata[22:0]))) begin
-      s1 <= wadata[31];
-      e1 <= wadata[30:23];
-      deka <= (wadata[30:23] == 0) ? {2'b0,wadata[22:0]} : {1'b0,1'b1,wadata[22:0]};
-      chibi <= (wbdata[30:23] == 0) ? ({2'b0,wbdata[22:0]} >> (wadata[30:23] - wbdata[30:23])) : ({1'b0,1'b1,wbdata[22:0]} >> (wadata[30:23] - wbdata[30:23]));
-    end else begin
-      s1 <= wbdata[31];
-      e1 <= wbdata[30:23];
-      deka <= (wbdata[30:23] == 0) ? {2'b0,wbdata[22:0]} : {1'b0,1'b1,wbdata[22:0]};
-      chibi <= (wadata[30:23] == 0) ? ({2'b0,wadata[22:0]} >> (wbdata[30:23] - wadata[30:23])) : ({1'b0,1'b1,wadata[22:0]} >> (wbdata[30:23] - wadata[30:23]));
-    end
-  end else if (state == STAGE2) begin
-    state <= STAGE3;
-    whiseiki2 <= whiseiki1;
-    s2 <= s1;
-    e2 <= e1;
-    if (tashi1hiki0 == 1) begin
-      kekka <= deka[24:0] + chibi[24:0];
-    end else begin
-      kekka <= deka[24:0] - chibi[24:0];
-    end
-  end else if (state == STAGE3) begin
-    done <= 1;
-    busy <= 0;
-    state <= WAIT_ST;
-    if (kekka[24] == 1) begin
-      result <= {s2,e2[7:0]+8'd1,kekka[23:1]};
-    end else if (kekka[23] == 1) begin
-      result <= (whiseiki2 == 1) ? {s2,e2[7:0]+8'b1,kekka[22:0]} : {s2,e2[7:0],kekka[22:0]};
-    end else if (kekka[22] == 1) begin
-      result <= (e2 < 1) ? 0 : {s2,e2[7:0]-8'd1,kekka[21:0],1'b0};
-    end else if (kekka[21] == 1) begin
-      result <= (e2 < 2) ? 0 : {s2,e2[7:0]-8'd2,kekka[20:0],2'b0};
-    end else if (kekka[20] == 1) begin
-      result <= (e2 < 3) ? 0 : {s2,e2[7:0]-8'd3,kekka[19:0],3'b0};
-    end else if (kekka[19] == 1) begin
-      result <= (e2 < 4) ? 0 : {s2,e2[7:0]-8'd4,kekka[18:0],4'b0};
-    end else if (kekka[18] == 1) begin
-      result <= (e2 < 5) ? 0 : {s2,e2[7:0]-8'd5,kekka[17:0],5'b0};
-    end else if (kekka[17] == 1) begin
-      result <= (e2 < 6) ? 0 : {s2,e2[7:0]-8'd6,kekka[16:0],6'b0};
-    end else if (kekka[16] == 1) begin
-      result <= (e2 < 7) ? 0 : {s2,e2[7:0]-8'd7,kekka[15:0],7'b0};
-    end else if (kekka[15] == 1) begin
-      result <= (e2 < 8) ? 0 : {s2,e2[7:0]-8'd8,kekka[14:0],8'b0};
-    end else if (kekka[14] == 1) begin
-      result <= (e2 < 9) ? 0 : {s2,e2[7:0]-8'd9,kekka[13:0],9'b0};
-    end else if (kekka[13] == 1) begin
-      result <= (e2 < 10) ? 0 : {s2,e2[7:0]-8'd10,kekka[12:0],10'b0};
-    end else if (kekka[12] == 1) begin
-      result <= (e2 < 11) ? 0 : {s2,e2[7:0]-8'd11,kekka[11:0],11'b0};
-    end else if (kekka[11] == 1) begin
-      result <= (e2 < 12) ? 0 : {s2,e2[7:0]-8'd12,kekka[10:0],12'b0};
-    end else if (kekka[10] == 1) begin
-      result <= (e2 < 13) ? 0 : {s2,e2[7:0]-8'd13,kekka[9:0],13'b0};
-    end else if (kekka[9] == 1) begin
-      result <= (e2 < 14) ? 0 : {s2,e2[7:0]-8'd14,kekka[8:0],14'b0};
-    end else if (kekka[8] == 1) begin
-      result <= (e2 < 15) ? 0 : {s2,e2[7:0]-8'd15,kekka[7:0],15'b0};
-    end else if (kekka[7] == 1) begin
-      result <= (e2 < 16) ? 0 : {s2,e2[7:0]-8'd16,kekka[6:0],16'b0};
-    end else if (kekka[6] == 1) begin
-      result <= (e2 < 17) ? 0 : {s2,e2[7:0]-8'd17,kekka[5:0],17'b0};
-    end else if (kekka[5] == 1) begin
-      result <= (e2 < 18) ? 0 : {s2,e2[7:0]-8'd18,kekka[4:0],18'b0};
-    end else if (kekka[4] == 1) begin
-      result <= (e2 < 19) ? 0 : {s2,e2[7:0]-8'd19,kekka[3:0],19'b0};
-    end else if (kekka[3] == 1) begin
-      result <= (e2 < 20) ? 0 : {s2,e2[7:0]-8'd20,kekka[2:0],20'b0};
-    end else if (kekka[2] == 1) begin
-      result <= (e2 < 21) ? 0 : {s2,e2[7:0]-8'd21,kekka[1:0],21'b0};
-    end else if (kekka[1] == 1) begin
-      result <= (e2 < 22) ? 0 : {s2,e2[7:0]-8'd22,kekka[0:0],22'b0};
-    end else if (kekka[0] == 1) begin
-      result <= (e2 < 23) ? 0 : {s2,e2[7:0]-8'd23,23'b0};
-    end else begin
-      result <= 0;
-    end
-  end
+
+hiseiki_reg <= hiseiki;
+hiseiki_a_reg <= hiseiki_a;
+tashi1hiki0_reg <= tashi1hiki0; 
+deka_s_reg <= deka_s;
+deka_e_reg <= deka_e;
+deka_m_reg <= deka_m;
+chibi_m_reg <= chibi_m;
+adata_reg_1 <= adata;
+bdata_reg_1 <= bdata;
+
+end
+
+wire [12:0] Hcarrysub;
+assign Hcarrysub = tashi1hiki0_reg ? {deka_m_reg[23:13],1'b1} + {chibi_m_reg[23:13],1'b1} : {deka_m_reg[23:13],1'b0} - {chibi_m_reg[23:13],1'b1};
+
+wire [11:0] Hcarry;
+assign Hcarry = Hcarrysub[12:1];
+
+wire [11:0] Hnocarry;
+assign Hnocarry = tashi1hiki0_reg ? deka_m_reg[23:13] + chibi_m_reg[23:13] : deka_m_reg[23:13] - chibi_m_reg[23:13];
+
+wire [13:0] Lsub;
+assign Lsub = tashi1hiki0_reg ? deka_m_reg[12:0] + chibi_m_reg[12:0] : {1'b1,deka_m_reg[12:0]} - chibi_m_reg[12:0];
+
+wire carry;
+assign carry = tashi1hiki0_reg ? Lsub[13] : ~Lsub[13];
+
+wire [12:0] L;
+assign L = Lsub[12:0];
+
+reg hiseiki_reg_2;
+reg hiseiki_a_reg_2;
+reg s2_reg;
+reg [7:0] e2_reg;
+reg [24:0] kekka_reg;
+reg [31:0] adata_reg_2;
+reg [31:0] bdata_reg_2;
+
+always@(posedge clk) begin
+
+hiseiki_reg_2 <= hiseiki_reg;
+hiseiki_a_reg_2 <= hiseiki_a_reg;
+s2_reg <= deka_s_reg;
+e2_reg <= deka_e_reg;
+kekka_reg <= carry ? {Hcarry,L} : {Hnocarry,L};
+adata_reg_2 <= adata_reg_1;
+bdata_reg_2 <= bdata_reg_1;
+
+end
+
+always@(posedge clk) begin
+
+if (hiseiki_reg_2) begin
+result <= hiseiki_a_reg_2 ? bdata_reg_2 : adata_reg_2;
+end else if (kekka_reg[24] == 1) begin
+result <= {s2_reg,e2_reg+8'd1,kekka_reg[23:1]};
+end else if (kekka_reg[23] == 1) begin
+result <= {s2_reg,e2_reg,kekka_reg[22:0]};
+end else if (kekka_reg[22] == 1) begin
+result <= (e2_reg < 1) ? 0 : {s2_reg,e2_reg-8'd1,kekka_reg[21:0],1'b0};
+end else if (kekka_reg[21] == 1) begin
+result <= (e2_reg < 2) ? 0 : {s2_reg,e2_reg-8'd2,kekka_reg[20:0],2'b0};
+end else if (kekka_reg[20] == 1) begin
+result <= (e2_reg < 3) ? 0 : {s2_reg,e2_reg-8'd3,kekka_reg[19:0],3'b0};
+end else if (kekka_reg[19] == 1) begin
+result <= (e2_reg < 4) ? 0 : {s2_reg,e2_reg-8'd4,kekka_reg[18:0],4'b0};
+end else if (kekka_reg[18] == 1) begin
+result <= (e2_reg < 5) ? 0 : {s2_reg,e2_reg-8'd5,kekka_reg[17:0],5'b0};
+end else if (kekka_reg[17] == 1) begin
+result <= (e2_reg < 6) ? 0 : {s2_reg,e2_reg-8'd6,kekka_reg[16:0],6'b0};
+end else if (kekka_reg[16] == 1) begin
+result <= (e2_reg < 7) ? 0 : {s2_reg,e2_reg-8'd7,kekka_reg[15:0],7'b0};
+end else if (kekka_reg[15] == 1) begin
+result <= (e2_reg < 8) ? 0 : {s2_reg,e2_reg-8'd8,kekka_reg[14:0],8'b0};
+end else if (kekka_reg[14] == 1) begin
+result <= (e2_reg < 9) ? 0 : {s2_reg,e2_reg-8'd9,kekka_reg[13:0],9'b0};
+end else if (kekka_reg[13] == 1) begin
+result <= (e2_reg < 10) ? 0 : {s2_reg,e2_reg-8'd10,kekka_reg[12:0],10'b0};
+end else if (kekka_reg[12] == 1) begin
+result <= (e2_reg < 11) ? 0 : {s2_reg,e2_reg-8'd11,kekka_reg[11:0],11'b0};
+end else if (kekka_reg[11] == 1) begin
+result <= (e2_reg < 12) ? 0 : {s2_reg,e2_reg-8'd12,kekka_reg[10:0],12'b0};
+end else if (kekka_reg[10] == 1) begin
+result <= (e2_reg < 13) ? 0 : {s2_reg,e2_reg-8'd13,kekka_reg[9:0],13'b0};
+end else if (kekka_reg[9] == 1) begin
+result <= (e2_reg < 14) ? 0 : {s2_reg,e2_reg-8'd14,kekka_reg[8:0],14'b0};
+end else if (kekka_reg[8] == 1) begin
+result <= (e2_reg < 15) ? 0 : {s2_reg,e2_reg-8'd15,kekka_reg[7:0],15'b0};
+end else if (kekka_reg[7] == 1) begin
+result <= (e2_reg < 16) ? 0 : {s2_reg,e2_reg-8'd16,kekka_reg[6:0],16'b0};
+end else if (kekka_reg[6] == 1) begin
+result <= (e2_reg < 17) ? 0 : {s2_reg,e2_reg-8'd17,kekka_reg[5:0],17'b0};
+end else if (kekka_reg[5] == 1) begin
+result <= (e2_reg < 18) ? 0 : {s2_reg,e2_reg-8'd18,kekka_reg[4:0],18'b0};
+end else if (kekka_reg[4] == 1) begin
+result <= (e2_reg < 19) ? 0 : {s2_reg,e2_reg-8'd19,kekka_reg[3:0],19'b0};
+end else if (kekka_reg[3] == 1) begin
+result <= (e2_reg < 20) ? 0 : {s2_reg,e2_reg-8'd20,kekka_reg[2:0],20'b0};
+end else if (kekka_reg[2] == 1) begin
+result <= (e2_reg < 21) ? 0 : {s2_reg,e2_reg-8'd21,kekka_reg[1:0],21'b0};
+end else if (kekka_reg[1] == 1) begin
+result <= (e2_reg < 22) ? 0 : {s2_reg,e2_reg-8'd22,kekka_reg[0:0],22'b0};
+end else if (kekka_reg[0] == 1) begin
+result <= (e2_reg < 23) ? 0 : {s2_reg,e2_reg-8'd23,23'b0};
+end else begin
+result <= 0;
+end
 end
 endmodule
 
-`default_nettype wire
+`default_nettype wire 
+
+
+
+
+
+
+
+
 
 
 
