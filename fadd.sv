@@ -2,7 +2,11 @@ module fadd(
 input wire [31:0] adata,
 input wire [31:0] bdata,
 output reg [31:0] result,
-input wire clk);
+input wire clk,
+input wire flag_in,
+input wire [4:0] address_in,
+output reg flag_out,
+output reg [4:0] address_out);
 
 wire hiseiki_a;
 assign hiseiki_a = ! (| adata[30:23]);
@@ -55,6 +59,8 @@ reg [23:0] deka_m_reg;
 reg [23:0] chibi_m_reg;
 reg [31:0] adata_reg_1;
 reg [31:0] bdata_reg_1;
+reg flag1;
+reg [4:0] address1;
 
 always@(posedge clk) begin
 
@@ -67,6 +73,8 @@ deka_m_reg <= deka_m;
 chibi_m_reg <= chibi_m;
 adata_reg_1 <= adata;
 bdata_reg_1 <= bdata;
+flag1 <= flag_in;
+address1 <= address_in;
 
 end
 
@@ -95,6 +103,8 @@ reg [7:0] e2_reg;
 reg [24:0] kekka_reg;
 reg [31:0] adata_reg_2;
 reg [31:0] bdata_reg_2;
+reg flag2;
+reg [4:0] address2;
 
 always@(posedge clk) begin
 
@@ -105,11 +115,14 @@ e2_reg <= deka_e_reg;
 kekka_reg <= carry ? {Hcarry,L} : {Hnocarry,L};
 adata_reg_2 <= adata_reg_1;
 bdata_reg_2 <= bdata_reg_1;
+flag2 <= flag1;
+address2 <= address1;
 
 end
 
 always@(posedge clk) begin
-
+flag_out <= flag2;
+address_out <= address2;
 if (hiseiki_reg_2) begin
 result <= hiseiki_a_reg_2 ? bdata_reg_2 : adata_reg_2;
 end else if (kekka_reg[24] == 1) begin
