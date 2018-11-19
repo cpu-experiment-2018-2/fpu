@@ -2,7 +2,7 @@
 `default_nettype none
 
 module test_fmul
-  #(parameter NSTAGE = 4)
+  #(parameter NSTAGE = 2)
    ();
    logic [31:0] y;
    shortreal    fx1,fx2,fy;
@@ -18,10 +18,18 @@ module test_fmul
    logic          en;
    logic 	clk;
    logic 	rstn;
+   logic        flagin;
+   logic [4:0]  addin;
+   logic        flagout;
+   logic [4:0]  addout;
 
    logic [31:0]	x1_reg[NSTAGE:0];
    logic [31:0]	x2_reg[NSTAGE:0];
    logic 	val[NSTAGE:0];
+   logic        flag[NSTAGE:0];
+   logic [4:0]  add[NSTAGE:0];
+   assign flagin = flag[0];
+   assign addin = add[0];
    
    logic [31:0] x1;
    logic [31:0] x2;
@@ -32,12 +40,18 @@ module test_fmul
    logic [29:0] counter1;
    logic [29:0] counter2;
    logic [29:0] counter3;
+   
+   logic [31:0] x1sisuu;
+   assign x1sisuu = x1_reg[NSTAGE];
+   
+   logic [31:0] x2sisuu;
+   assign x2sisuu = x2_reg[NSTAGE];
 
-   fmul u1(en,x1,x2,y,done,busy,clk,rstn);
+   fmul u1(x1,x2,y,clk,flagin,addin,flagout,addout);
 
    initial begin
-      // $dumpfile("test_fadd_p2.vcd");
-      // $dumpvars(0);
+     //  $dumpfile("test_fadd_p2.vcd");
+     //  $dumpvars(0);
       #1;
       rstn = 0;
       clk = 1;
@@ -64,7 +78,7 @@ module test_fmul
       #1;
       clk = 1;
        counter1 <= counter1+1;
-       $display("counter1 %b ", counter1);
+  //     $display("counter1 %b ", counter1);
       for (i=0; i<255; i++) begin
          for (j=0; j<255; j++) begin
             for (s1=0; s1<2; s1++) begin
@@ -109,35 +123,14 @@ module test_fmul
                         x2_reg[0] <= {s2[0],j[7:0],m2};
 			val[0] <= 1;
 			en <= 1;
+			flag[0] <= $urandom();
+			add[0] <= $urandom();
 
                         #1;
 			clk = 0;
 			
 			
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-//			        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-			
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-			
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-			
+		
 			
 			#1;
 			clk = 1;	
@@ -173,31 +166,7 @@ module test_fmul
 		     clk = 0;
 		     
 		     
-		     #1;
-		     clk = 1;
-		     val[0] <= 0;
-		      counter1 <= counter1+1;
-	//	             $display("counter1 %b ", counter1);
-		     #1;
-		     clk = 0;
-		     
-		     #1;
-		     clk = 1;
-		     val[0] <= 0;
-		     	 counter1 <= counter1+1;
-	//	     	        $display("counter1 %b ", counter1);		
-			#1;
-			clk = 0;
-			#1;
-			clk = 1;
-			val[0] <= 0;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
-			#1;
-			clk = 0;
-						
-
-			
+	
 			#1;
 			clk = 1;
 			 counter1 <= counter1+1;
@@ -219,12 +188,16 @@ module test_fmul
       x1_reg[NSTAGE:1] <= x1_reg[NSTAGE-1:0];
       x2_reg[NSTAGE:1] <= x2_reg[NSTAGE-1:0];
       val[NSTAGE:1] <= val[NSTAGE-1:0];
+      flag[NSTAGE:1] <= flag[NSTAGE-1:0];
+      add[NSTAGE:1] <= add[NSTAGE-1:0];
   //           $display("counter2 %b ", counter2);
    end else begin
   counter2 <= counter2 + 1;
       x1_reg[NSTAGE:1] <= x1_reg[NSTAGE-1:0];
       x2_reg[NSTAGE:1] <= x2_reg[NSTAGE-1:0];
-      val[NSTAGE:1] <= val[NSTAGE-1:0];  
+      val[NSTAGE:1] <= val[NSTAGE-1:0];
+      flag[NSTAGE:1] <= flag[NSTAGE-1:0];
+      add[NSTAGE:1] <= add[NSTAGE-1:0];  
   //           $display("counter2 %b ", counter2);
    end 
    end
@@ -243,8 +216,17 @@ module test_fmul
 	 fy = fx1 * fx2;
 	 fybit = $shortrealtobits(fy);
 
-
-	 if ((!(y[30:23] == 0 && fybit[30:23] == 0)) && y != fybit && y != fybit - 1 && y != fybit + 1 && fybit[30:23] != 8'd255) begin
+/*	$display("kekka = %b",u1.kekka_reg);
+	$display ("deka = %b",u1.deka_m_reg);
+	$display("adata = %b",u1.adata);
+	$display("bdata = %b",u1.bdata);
+	$display("Hcarry = %b",u1.Hcarry);
+	$display("Hnocarry = %b",u1.Hnocarry);
+	$display("L = %b",u1.L);
+*/	if (flagout != flag[NSTAGE] || add[NSTAGE] != addout) begin
+$display("flag,add %b %b %b %b", flagout,flag[NSTAGE],addout,add[NSTAGE]);
+end 
+	 if ((!(fybit[30:23] == 0 && y[30:23] == 0)) && (y != fybit && y != fybit - 1 && y != fybit + 1 ) && (fybit[30:23] != 255) && (!((x1sisuu[30:23] == 0 || x2sisuu[30:23] == 0) && y[30:23] == 0))) begin
             $display("x1, x2 = %b %b", x1_reg[NSTAGE], x2_reg[NSTAGE]);
             $display("%e %b ", fy, fybit);
             $display("%e %b \n", $bitstoshortreal(y), y);
