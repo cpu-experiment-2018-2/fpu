@@ -2,7 +2,7 @@
 `default_nettype none
 
 module test_fadd
-  #(parameter NSTAGE = 3)
+  #(parameter NSTAGE = 2)
    ();
    logic [31:0] y;
    shortreal    fx1,fx2,fy;
