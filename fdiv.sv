@@ -10,8 +10,8 @@ input wire [4:0] address_in,
 output reg flag_out,
 output reg [4:0] address_out);
 
-reg [24:0] s [2047:0];
-reg [12:0] t [2047:0];
+(* ram_style = "distributed" *) reg [24:0] s [2047:0];
+(* ram_style = "distributed" *) reg [12:0] t [2047:0];
 
 assign s[0] = 16777216;
 assign t[0] = 8188;
@@ -4116,10 +4116,10 @@ assign key = bdata[22:12];
 wire [11:0] A2;
 assign A2 = bdata[11:0];
 
-wire [24:0] S;
+(* ram_style = "distributed" *) wire [24:0] S;
 assign S = s[key];
 
-wire [12:0] T;
+(* ram_style = "distributed" *) wire [12:0] T;
 assign T = t[key];
 
 wire [24:0] S_TA_1;
@@ -4171,7 +4171,7 @@ reg flag1;
 reg [4:0] address1;
 reg notzero_2;
 
-always@(posedge clk) begin
+always_ff@(posedge clk) begin
 akasuu <= akasuu_1;
 bkasuu <= one_reg_1 ? S_TA[24:1] : S_TA[23:0];
 one_reg <= one_reg_1;
@@ -4207,7 +4207,7 @@ reg notzero;
 reg flag2;
 reg [4:0] address2;
 
-always@(posedge clk) begin
+always_ff@(posedge clk) begin
 
 a0b0 <= a0 * b0;
 
