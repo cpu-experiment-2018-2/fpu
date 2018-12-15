@@ -4,12 +4,9 @@
 module fless(
 input wire [31:0] srca,
 input wire [31:0] srcb,
-output reg result,
-input wire clk);
+output wire result);
 
-//kekkaが実質の出力
-wire kekka;
-assign kekka = 
+assign result = 
   |srca[30:23] ? 
     |srcb[30:23] ? 
       srca[31] ? 
@@ -23,11 +20,6 @@ assign kekka =
     : |srcb[30:23] ?
       ~srcb[31]
       : 0;     
-
-
-always@(posedge clk) begin
-result <= kekka;
-end
 
 endmodule
 
