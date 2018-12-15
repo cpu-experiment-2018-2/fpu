@@ -1,89 +1,39 @@
 `timescale 1ns / 100ps
 `default_nettype none
 
-module test_fless
-  #(parameter NSTAGE = 1)
-   ();
-   logic  y;
+module test_fless();
+   wire [31:0] x1,x2;
+   logic y;
+   wire        ovf;
+   logic [31:0] x1i,x2i;
    shortreal    fx1,fx2,fy;
    int          i,j,k,it,jt;
    bit [22:0]   m1,m2;
    bit [9:0]    dum1,dum2;
-   logic [31:0] fybit;
+   logic [31:0]  fybit;
    int          s1,s2;
    logic [23:0] dy;
-   bit [22:0] 	tm;
-   logic        done;
-   logic        busy;
-   logic          en;
-   logic 	clk;
-   logic 	rstn;
-   logic        flagin;
-   logic [4:0]  addin;
-   logic        flagout;
-   logic [4:0]  addout;
+   bit [22:0] tm;
+   bit 	      fovf;
+   bit 	      checkovf;
 
-   logic [31:0]	x1_reg[NSTAGE:0];
-   logic [31:0]	x2_reg[NSTAGE:0];
-   logic 	val[NSTAGE:0];
-   logic        flag[NSTAGE:0];
-   logic [4:0]  add[NSTAGE:0];
-   assign flagin = flag[0];
-   assign addin = add[0];
+   assign x1 = x1i;
+   assign x2 = x2i;
    
-   logic [31:0] x1;
-   logic [31:0] x2;
-   
-   assign x1 = x1_reg[0];
-   assign x2 = x2_reg[0];
-   
-   logic [31:0] foo;
-   logic [31:0] bar;
-   assign foo = x1_reg[NSTAGE];
-   assign bar = x2_reg[NSTAGE];
-   
-   logic [29:0] counter1;
-   logic [29:0] counter2;
-   logic [29:0] counter3;
-
-   fless u1(x1,x2,y,clk);
+   fless u1(x1,x2,y);
 
    initial begin
-     //  $dumpfile("test_fadd_p2.vcd");
-     //  $dumpvars(0);
-      #1;
-      rstn = 0;
-      clk = 1;
-      val[0] <= 0;
-      val[1] <= 0;
-      val[2] <= 0;
-      val[3] <= 0;
-      x1_reg[0] = 0;
-      x2_reg[0] = 0;
-      en <= 0;
-      counter1 <= 0;
-  //                $display("counter1 %b ", counter1);
+      // $dumpfile("test_fsub.vcd");
+      // $dumpvars(0);
 
-      #1;
-      clk = 0;
-      #1;
-      clk = 1;
-      rstn = 1;
-      counter1 <= counter1+1;
-  //           $display("counter1 %b ", counter1);
-      #1;
-      clk = 0;
-
-      #1;
-      clk = 1;
-       counter1 <= counter1+1;
-       $display("counter1 %b ", counter1);
       for (i=0; i<255; i++) begin
          for (j=0; j<255; j++) begin
             for (s1=0; s1<2; s1++) begin
                for (s2=0; s2<2; s2++) begin
                   for (it=0; it<10; it++) begin
                      for (jt=0; jt<10; jt++) begin
+                        #1;
+
                         case (it)
                           0 : m1 = 23'b0;
                           1 : m1 = {22'b0,1'b1};
@@ -118,23 +68,28 @@ module test_fless
                           end
                         endcase
                         
-                        x1_reg[0] <= {s1[0],i[7:0],m1};
-                        x2_reg[0] <= {s2[0],j[7:0],m2};
-			val[0] <= 1;
-			en <= 1;
-			flag[0] <= $urandom();
-			add[0] <= $urandom();
+                        x1i = {s1[0],i[7:0],m1};
+                        x2i = {s2[0],j[7:0],m2};
 
+                        fx1 = $bitstoshortreal(x1i);
+                        fx2 = $bitstoshortreal(x2i);
+                        fybit = fx1 < fx2;
+                     //   fybit = $shortrealtobits(fy);
+
+			checkovf = i < 255 && j < 255;
+		//	if ( checkovf && fybit[30:23] == 255 ) begin
+		//	   fovf = 1;
+		//	end else begin
+		//	   fovf = 0;
+		//	end
+                        
                         #1;
-			clk = 0;
-			
-			
-		
-			
-			#1;
-			clk = 1;	
-			 counter1 <= counter1+1;
-		//	        $display("counter1 %b ", counter1);		
+
+                        if ((y != fybit) && (!(x1[30:23] == 0 && x2[30:23] == 0 && y == 0))) begin
+                           $display("x1, x2 = %b %b", x1, x2);
+                           $display("%b",fybit);
+                           $display("%b\n", y);
+                        end
                      end
                   end
                end
@@ -147,9 +102,10 @@ module test_fless
             for (s2=0; s2<2; s2++) begin
                for (j=0;j<23;j++) begin
                   repeat(10) begin
+                     #1;
 
                      {m1,dum1} = $urandom();
-                     x1_reg[0] <= {s1[0],i[7:0],m1};
+                     x1i = {s1[0],i[7:0],m1};
                      {m2,dum2} = $urandom();
                      for (k=0;k<j;k++) begin
                         tm[k] = m2[k];
@@ -157,19 +113,27 @@ module test_fless
                      for (k=j;k<23;k++) begin
                         tm[k] = m1[k];
                      end
-                     x2_reg[0] <= {s2[0],i[7:0],tm};
-		     val[0] <= 1;
-		     en <= 1;
+                     x2i = {s2[0],i[7:0],tm};
+
+                     fx1 = $bitstoshortreal(x1i);
+                     fx2 = $bitstoshortreal(x2i);
+                     fybit = fx1 < fx2;
+               //      fybit = $shortrealtobits(fy);
+                     
+		     checkovf = i < 255;
+		 //    if (checkovf && fybit[30:23] == 255) begin
+		//	fovf = 1;
+		 //    end else begin
+		//	fovf = 0;
+		  //   end
 
                      #1;
-		     clk = 0;
-		     
-		     
-	
-			#1;
-			clk = 1;
-			 counter1 <= counter1+1;
-	//		        $display("counter1 %b ", counter1);
+
+                     if ((y != fybit) && (!(x1[30:23] == 0 && x2[30:23] == 0 && y == 0))) begin
+                        $display("x1, x2 = %b %b", x1, x2);
+                        $display("%b", fybit);
+                        $display("%b\n", y);
+                     end
                   end
                end
             end
@@ -177,60 +141,6 @@ module test_fless
       end
       $finish;
    end
-
-   always @(posedge clk) begin
- //  $display ("x1 \n 4 %b \n 3 %b \n 2 %b \n 1 %b \n 0 %b \n", x1_reg[4], x1_reg[3],x1_reg[2],x1_reg[1],x1_reg[0]);
- //    $display ("x2 \n 4 %b \n 3 %b \n 2 %b \n 1 %b \n 0 %b \n", x2_reg[4], x2_reg[3],x2_reg[2],x2_reg[1],x2_reg[0]);
- //    $display("x1wire %b \n x2wire %b \n y %b", x1,x2,y);
-   if (counter1 == 2) begin
-   counter2 <= 3;
-      x1_reg[NSTAGE:1] <= x1_reg[NSTAGE-1:0];
-      x2_reg[NSTAGE:1] <= x2_reg[NSTAGE-1:0];
-      val[NSTAGE:1] <= val[NSTAGE-1:0];
-      flag[NSTAGE:1] <= flag[NSTAGE-1:0];
-      add[NSTAGE:1] <= add[NSTAGE-1:0];
-  //           $display("counter2 %b ", counter2);
-   end else begin
-  counter2 <= counter2 + 1;
-      x1_reg[NSTAGE:1] <= x1_reg[NSTAGE-1:0];
-      x2_reg[NSTAGE:1] <= x2_reg[NSTAGE-1:0];
-      val[NSTAGE:1] <= val[NSTAGE-1:0];
-      flag[NSTAGE:1] <= flag[NSTAGE-1:0];
-      add[NSTAGE:1] <= add[NSTAGE-1:0];  
-  //           $display("counter2 %b ", counter2);
-   end 
-   end
-   
-   always @(posedge clk) begin
-   if (counter1 == 2) begin
-   counter3 <= 3;
- //         $display("counter3 %b ", counter3);
-   end else begin
-   counter3 <= counter3 + 1;
- //         $display("counter3 %b ", counter3);
-   end
-      if (val[NSTAGE]) begin
-	 fx1 = $bitstoshortreal(x1_reg[NSTAGE]);
-	 fx2 = $bitstoshortreal(x2_reg[NSTAGE]);
-	 fybit = fx1 < fx2;
-//	 fybit = $shortrealtobits(fy);
-
-/*	$display("kekka = %b",u1.kekka_reg);
-	$display ("deka = %b",u1.deka_m_reg);
-	$display("adata = %b",u1.adata);
-	$display("bdata = %b",u1.bdata);
-	$display("Hcarry = %b",u1.Hcarry);
-	$display("Hnocarry = %b",u1.Hnocarry);
-	$display("L = %b",u1.L);
-*/	if (flagout != flag[NSTAGE] || add[NSTAGE] != addout) begin
-$display("flag,add %b %b %b %b", flagout,flag[NSTAGE],addout,add[NSTAGE]);
-end 
-	 if ( (y != fybit ) && (!(foo[30:23] == 0 && bar[30:23] == 0 && y == 0))) begin
-            $display("x1, x2 = %b %b", x1_reg[NSTAGE], x2_reg[NSTAGE]);
-            $display("%e %b ", fy, fybit);
-            $display("%e %b \n", $bitstoshortreal(y), y);
-	 end
-      end
-   end
 endmodule
 
+`default_nettype wire
