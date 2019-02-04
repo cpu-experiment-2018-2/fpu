@@ -127,6 +127,8 @@ result <=  {9'd385,hosuu[1:0],21'b0};
 result <=  {9'd384,hosuu[0:0],22'b0};
 32'b00000000000000000000000000000001:
 result <=  32'd3212836864;
+default:
+result <= 32'd0;
 endcase
 end else begin
 casex (adata)
@@ -194,6 +196,8 @@ result <=  {9'd129,adata[1:0],21'b0};
 result <=  {9'd128,adata[0:0],22'b0};
 32'b00000000000000000000000000000001:
 result <=  32'd1065353216;
+default:
+result <= 32'd0;
 endcase
 end
 address_out <= address_in;
