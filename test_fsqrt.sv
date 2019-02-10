@@ -41,7 +41,7 @@ module test_fsqrt
    logic [29:0] counter2;
    logic [29:0] counter3;
    
-   logic [22:0] hoge; 
+   logic [23:0] hoge; 
    
    reg [7:0] nazo_1;
 
@@ -83,10 +83,10 @@ module test_fsqrt
 
       #1;
        counter1 <= counter1+1;
-      for (i=0;i<8388608;i++) begin
+      for (i=0;i<16777216;i++) begin
       clk = 1;
       
-      x1_reg[0] <= {1'b0,8'd127,hoge};
+      x1_reg[0] <= {1'b0,7'd55,hoge};
       val[0] <= 1;
 			en <= 1;
 			flag[0] <= $urandom();
@@ -148,10 +148,11 @@ module test_fsqrt
 */	if (flagout != flag[NSTAGE] || add[NSTAGE] != addout) begin
 $display("flag,add %b %b %b %b", flagout,flag[NSTAGE],addout,add[NSTAGE]);
 end 
-	 if ((!((fybit[30:23] == 0 || fuga[30:23] == 0) && y[30:23] == 0)) && (y < fybit - 7 || y > fybit + 7) && (!(fybit[30:23] == 255))) begin
+	 if ((!((fybit[30:23] === 0 || fuga[30:23] === 0) && y[30:23] === 0)) && (!(y === fybit - 7)) &&(!(y === fybit - 6)) &&(!(y === fybit - 5)) &&(!(y === fybit - 4)) &&(!(y === fybit - 3)) &&(!(y === fybit - 2)) &&(!(y === fybit - 1)) &&(!(y === fybit)) &&(!(y === fybit + 7)) &&(!(y === fybit + 6)) &&(!(y === fybit + 5)) &&(!(y === fybit +4)) &&(!(y === fybit + 3)) &&(!(y === fybit + 2)) &&(!(y === fybit + 1)) && (!(fybit[30:23] === 255))) begin
             $display("x1, x2 = %b %b", x1_reg[NSTAGE], x2_reg[NSTAGE]);
             $display("%e %b ", fy, fybit);
             $display("%e %b \n", $bitstoshortreal(y), y);
+        //    $display("%d\n",u1.key);
 	 end
       end
    end
