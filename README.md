@@ -38,3 +38,5 @@ itof完成、レイテンシ1、324MHzまで。verilogがちんぽなせいで�
 ftoi完成、レイテンシ1、305MHzまで。hoge.cでテスト。
 
 一応itofとftoiのverilogのテストをupしましたがクソなので実質値の表示用に使っていた
+
+fsqrtのテーブルが小さくなりました!
