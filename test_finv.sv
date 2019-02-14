@@ -141,7 +141,7 @@ module test_finv
 */	if (flagout != flag[NSTAGE] || add[NSTAGE] != addout) begin
 $display("flag,add %b %b %b %b", flagout,flag[NSTAGE],addout,add[NSTAGE]);
 end 
-	 if ((!((fybit[30:23] == 0 || fuga[30:23] == 0) && y[30:23] == 0)) && (y < fybit - 3 || y > fybit + 3) && (!(fybit[30:23] == 255))) begin
+	 if ((!((fybit[30:23] === 0 || fuga[30:23] === 0) && y[30:23] === 0)) && (!(y === fybit - 4)) &&(!(y === fybit + 4)) && (!(y === fybit - 3)) &&(!(y === fybit - 2)) &&(!(y === fybit - 1)) &&(!(y === fybit)) && (!(y === fybit + 3)) &&(!(y === fybit + 2)) &&(!(y === fybit + 1)) && (!(fybit[30:23] === 255))) begin
             $display("x1, x2 = %b %b", x1_reg[NSTAGE], x2_reg[NSTAGE]);
             $display("%e %b ", fy, fybit);
             $display("%e %b \n", $bitstoshortreal(y), y);
