@@ -76,8 +76,8 @@ module test_fdiv
       clk = 1;
        counter1 <= counter1+1;
        $display("counter1 %b ", counter1);
-      for (i=0; i<255; i++) begin
-         for (j=1; j<255; j++) begin
+      for (i=0; i<254; i++) begin
+         for (j=1; j<254; j++) begin
             for (s1=0; s1<2; s1++) begin
                for (s2=0; s2<2; s2++) begin
                   for (it=0; it<10; it++) begin
@@ -140,7 +140,7 @@ module test_fdiv
          end
       end
 
-      for (i=1; i<255; i++) begin
+      for (i=1; i<254; i++) begin
          for (s1=0; s1<2; s1++) begin
             for (s2=0; s2<2; s2++) begin
                for (j=0;j<23;j++) begin
@@ -223,7 +223,7 @@ module test_fdiv
 */	if (flagout != flag[NSTAGE] || add[NSTAGE] != addout) begin
 $display("flag,add %b %b %b %b", flagout,flag[NSTAGE],addout,add[NSTAGE]);
 end 
-	 if ((!((fybit[30:23] == 0 || fuga[30:23] == 0) && y[30:23] == 0)) && (y < fybit - 7 || y > fybit + 7) && (!(fybit[30:23] == 255))) begin
+	 if ((!((fybit[30:23] === 0 || fuga[30:23] === 0) && y[30:23] === 0)) && (!(y === fybit - 7)) &&(!(y === fybit - 6)) &&(!(y === fybit - 5)) &&(!(y === fybit - 4)) &&(!(y === fybit - 3)) &&(!(y === fybit - 2)) &&(!(y === fybit - 1)) &&(!(y === fybit)) &&(!(y === fybit + 7)) &&(!(y === fybit + 6)) &&(!(y === fybit + 5)) &&(!(y === fybit +4)) &&(!(y === fybit + 3)) &&(!(y === fybit + 2)) &&(!(y === fybit + 1)) && (!(fybit[30:23] === 255))) begin
             $display("x1, x2 = %b %b", x1_reg[NSTAGE], x2_reg[NSTAGE]);
             $display("%e %b ", fy, fybit);
             $display("%e %b \n", $bitstoshortreal(y), y);
